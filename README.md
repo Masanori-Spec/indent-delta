@@ -38,20 +38,35 @@ The uncompressed ZIP contains:
 
 Failure or incomplete reports can be downloaded and retain their status. Malformed or unsupported input cannot produce a current export. Edits invalidate the previous review; stale exports are disabled. Re-import the manifest and replacement separately to reproduce a review.
 
-## Run and verify
+## Run the offline app
 
-Node 22+ and Python 3.12 are sufficient for the source/native checks:
+The `indent-delta-offline.zip` deliverable is a self-contained app bundle. Extract it, run `python3 serve.py` (`py serve.py` on Windows), and open the printed loopback URL, normally `http://127.0.0.1:8765/`. Python 3.10+ is sufficient; no npm install or internet connection is needed. All UI/worker/WASM assets and third-party notices are included. Use `--port 8766` if needed. Keep the terminal open and press Ctrl+C to stop.
+
+Do not double-click `index.html`: browser restrictions on file:// module workers require a local HTTP server. The launcher binds only to `127.0.0.1`, serves only the extracted folder, and does not open a browser or upload anything. Do not place private files in that folder while serving it.
+
+The public source repository also includes the prebuilt `dist/` assets. After GitHub **Code → Download ZIP** and extraction, run from the repository folder:
+
+```sh
+python3 -m http.server 8765 --bind 127.0.0.1 --directory dist
+```
+
+Open `http://127.0.0.1:8765/`. This release is public source plus an offline app; a remotely hosted website is not required or promised.
+
+## Rebuild and verify
+
+Node 22+ and Python 3.12 are used for development and native checks:
 
 ```sh
 npm ci
 python -m pip install --require-hashes -r requirements-test.txt
 npm run verify
-python -m http.server 4173 --directory dist
 ```
 
-Open `http://localhost:4173`. The pinned npm lockfile is part of the source. Python EditorConfig 0.17.1 is a test-only dependency; its wheel is hash-pinned and not vendored.
+This builds the app, deterministically packages `release/indent-delta-offline.zip`, checks its nine entries, runs 34 unit/integration tests, and compares 50 before/after resolutions with both physical official cores. `CONTENTS.sha256` records the exact offline files. The extracted package is materialized in ignored `.offline-preview/` for testing.
 
-`npm run test:browser` is the Playwright suite, after installing the official Chromium runtime with `npx playwright install --with-deps chromium`. This is configured in GitHub Actions; browser execution status is separate from source/native test success. The initial authoring environment did not launch a local browser.
+The pinned npm lockfile is part of the source. Python EditorConfig 0.17.1 is test-only, hash-pinned, and not vendored. To run the real-browser suite, install the official browser runtime with `npx playwright install --with-deps chromium`, then run `npm run test:browser`. Browser CI serves the actual extracted offline package and retains Chromium sandboxing on Ubuntu 22.04; no security settings are weakened.
+
+The app's browser controls and four-file review download passed [CI on b5d944ab](https://github.com/Masanori-Spec/indent-delta/actions/runs/37425061311). The packaged app assets are byte-identical to that tested build. See [current verification runs](https://github.com/Masanori-Spec/indent-delta/actions/workflows/verify.yml) for the final/current source revision. CI also uploads the offline app ZIP, screenshots, browser report, and the app-generated review ZIP as `verification-evidence`.
 
 ## Implementation
 
