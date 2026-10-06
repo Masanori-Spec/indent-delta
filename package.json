@@ -1,0 +1,26 @@
+{
+  "name": "indent-delta",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/engine.test.mjs",
+    "test:native": "node scripts/feasibility.mjs",
+    "test:browser": "playwright test",
+    "verify": "npm run build && npm test && npm run test:native"
+  },
+  "dependencies": {
+    "buffer": "6.0.3",
+    "editorconfig": "3.0.2",
+    "path-browserify": "1.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "esbuild": "0.25.10"
+  },
+  "description": "Offline EditorConfig replacement review for an explicit configuration hierarchy and finite file paths",
+  "engines": {
+    "node": ">=22"
+  }
+}

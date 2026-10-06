@@ -1,0 +1,5 @@
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {parseSync} from 'editorconfig';
+const x=JSON.parse(fs.readFileSync(0,'utf8')),result={};
+const safe=p=>{if(typeof p!=='string'||!p.startsWith('/')||p.includes('\\')||p.split('/').some(v=>v==='..'||v==='.')||/[\x00-\x1f]/.test(p))throw Error('Unsafe fixture path');return p.slice(1);};
+for(const phase of ['before','after']){const directory=fs.mkdtempSync(path.join(os.tmpdir(),'indentdelta-js-oracle-'));try{for(const c of x.manifest.configs){const dest=path.join(directory,safe(c.path));fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,phase==='after'&&c.path===x.manifest.target?x.replacement:c.content,'utf8');}result[phase]={};for(const p of x.manifest.paths){const dest=path.join(directory,safe(p));fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,'');result[phase][p]=Object.fromEntries(Object.entries(parseSync(dest,{root:directory,unset:false})).map(([k,v])=>[k,String(v)]));}}finally{fs.rmSync(directory,{recursive:true,force:true});}}
+console.log(JSON.stringify(result));

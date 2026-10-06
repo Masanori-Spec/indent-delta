@@ -1,0 +1,18 @@
+{
+  "format": "indent-delta/1",
+  "configs": [
+    {"path":"/demo/.editorconfig","content":"root = true\n\n[*]\nindent_style = space\nindent_size = 2\nend_of_line = lf\n\n[*.txt]\nindent_size = 4\n\n[CMakeLists.txt]\nindent_size = 2\n"},
+    {"path":"/demo/vendor/.editorconfig","content":"root = true\n\n[*]\nindent_style = tab\nindent_size = 8\n"}
+  ],
+  "absent": ["/demo/sub/.editorconfig","/demo/docs/.editorconfig"],
+  "paths": ["/demo/docs/prose.txt","/demo/CMakeLists.txt","/demo/sub/CMakeLists.txt","/demo/main.c","/demo/vendor/library.txt"],
+  "target": "/demo/.editorconfig",
+  "assertions": [
+    {"path":"/demo/docs/prose.txt","property":"indent_size","expect":"change","value":"3"},
+    {"path":"/demo/CMakeLists.txt","property":"indent_size","expect":"stay"},
+    {"path":"/demo/sub/CMakeLists.txt","property":"indent_size","expect":"stay"},
+    {"path":"/demo/main.c","property":"indent_size","expect":"stay"},
+    {"path":"/demo/vendor/library.txt","property":"indent_size","expect":"stay"},
+    {"path":"/demo/main.c","property":"end_of_line","expect":"stay"}
+  ]
+}

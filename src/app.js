@@ -1,0 +1,51 @@
+import demo from '../fixtures/demo.json';import {zip} from './zip.js';
+const $=id=>document.getElementById(id);let manifest=structuredClone(demo),drafts={},result=null,worker=null,request=0,timeout=null,reviewedReplacement='',inputRevision=0;
+const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function original(){return manifest.configs.find(c=>c.path===manifest.target).content;}
+function current(){return $('replacement').value;}
+function status(head,body,type=''){const el=$('status');el.className='status '+type;el.replaceChildren();const h=document.createElement('strong');h.textContent=head;const b=document.createElement('span');b.textContent=body;el.append(h,b);}
+function markStale(){inputRevision++;drafts[manifest.target]=current();request++;clearTimeout(timeout);worker?.terminate();worker=null;result=null;$('download').disabled=true;$('results').setAttribute('aria-busy','false');$('review').disabled=false;$('edit-state').textContent='Not yet reviewed';status('Replacement changed','Run the review again. Previous results below are stale.','stale');}
+function renderSetup(){
+ $('target').replaceChildren(...manifest.configs.map(c=>{const o=document.createElement('option');o.value=c.path;o.textContent=c.path;o.selected=c.path===manifest.target;return o;}));
+ $('hierarchy').innerHTML=manifest.configs.map(c=>`<div>${escape(c.path)}</div>`).join('');
+ $('original').textContent=original();$('replacement').value=drafts[manifest.target]??original();$('manifest-input').value=JSON.stringify(manifest,null,2);$('scope-count').textContent=`${manifest.configs.length} configs · ${manifest.paths.length} listed paths · ${manifest.assertions?.length??0} assertions`;
+ const isDemo=JSON.stringify(manifest.configs)===JSON.stringify(demo.configs)&&JSON.stringify(manifest.paths)===JSON.stringify(demo.paths)&&manifest.target==='/demo/.editorconfig';$('naive').disabled=!isDemo;$('fixed').disabled=!isDemo;
+}
+function display(value){return value?.kind==='absent'?'∅':value?.value??'unknown';}
+function cell(values,p){return Object.prototype.hasOwnProperty.call(values,p)?values[p]:'∅';}
+function renderReview(r){
+ const failures=r.assertions.filter(a=>!a.passed).length,passed=r.assertions.length-failures;
+ if(!r.complete)status('Incomplete hierarchy',`${r.missing.length} unknown ancestor checks. Supply the missing configs or explicitly record that they are absent.`,'fail');
+ else if(failures)status(`${failures} assertion${failures===1?'':'s'} failed`,`${r.changedPaths} of ${r.rows.length} paths changed · ${passed} checks passed`,'fail');
+ else if(r.assertions.length)status('Listed assertions passed',`${r.changedPaths} of ${r.rows.length} paths changed · ${passed} checks passed. Only this imported scope was checked.`,'pass');
+ else status('No assertions supplied',`${r.changedPaths} of ${r.rows.length} paths changed. Add checks before treating this as reviewed.`,'stale');
+ let html='';if(r.missing.length)html+=`<ul class="missing">${r.missing.map(m=>`<li>${escape(m.phase)}: ${escape(m.path)} needs ${escape(m.config)}</li>`).join('')}</ul>`;
+ html+=`<div class="subheading"><h3>Before / after property matrix</h3><span>∅ absent · unset preserved</span></div><div class="table-wrap"><table><thead><tr><th scope="col">Listed path</th>${r.properties.map(p=>`<th scope="col">${escape(p)}</th>`).join('')}</tr></thead><tbody>${r.rows.map(row=>`<tr><td class="path">${escape(row.path)}</td>${r.properties.map(p=>{const b=row.before?cell(row.before.values,p):'unknown',a=row.after?cell(row.after.values,p):'unknown',changed=row.changes?.includes(p);return `<td class="value ${changed?'changed':'unchanged'}">${changed?`<span class="before">${escape(b)}</span><span class="after">${escape(a)}</span>`:escape(a)}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
+ html+=`<div class="subheading"><h3>Expected change / stay checks</h3><span>${r.assertions.length} explicit checks</span></div>${r.assertions.length?`<div class="table-wrap"><table class="assertions"><thead><tr><th>Path / property</th><th>Expectation</th><th>Observed</th><th>Result</th></tr></thead><tbody>${r.assertions.map(a=>`<tr><td><span class="path">${escape(a.path)}</span><br><span class="hint">${escape(a.property)}</span></td><td>${escape(a.expect)}${a.value!==undefined?`<br>${escape(a.value)}`:''}</td><td class="value">${escape(display(a.before))} → ${escape(display(a.after))}</td><td><span class="badge ${a.passed?'pass':'fail'}">${a.passed?'PASS':'FAIL'}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="hint">Add assertions to your manifest. A comparison alone is not an approval.</p>'}`;
+ html+=`<details class="sources"><summary>Matched sections, in applied order</summary>${r.rows.map(row=>`<strong class="path">${escape(row.path)}</strong><ul>${['before','after'].map(phase=>`<li>${phase}: ${row[phase]?row[phase].sources.map(s=>`${escape(s.path)} [${escape(s.glob)}]`).join(' → ')||'no matching sections':'unknown ancestry'}</li>`).join('')}</ul>`).join('')}</details>`;$('results').innerHTML=html;
+}
+function runReview(){
+ clearTimeout(timeout);worker?.terminate();worker=null;const id=++request,rep=current();$('error').hidden=true;$('download').disabled=true;$('review').disabled=true;$('results').setAttribute('aria-busy','true');status('Reviewing imported scope','No files are uploaded or changed.');
+ const fail=message=>{if(id!==request)return;clearTimeout(timeout);worker?.terminate();worker=null;result=null;$('review').disabled=false;$('results').setAttribute('aria-busy','false');$('error').textContent=message;$('error').hidden=false;status('Review blocked','Correct the input and run the review again.','fail');$('edit-state').textContent='Review blocked';};
+ try{worker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});}catch(e){fail('Browser review worker could not start. Use a browser that supports module workers, served over HTTP(S). '+e.message);return;}
+ worker.onmessage=({data})=>{if(data.id!==request)return;clearTimeout(timeout);worker.terminate();worker=null;$('review').disabled=false;$('results').setAttribute('aria-busy','false');if(data.error){fail(data.error);return;}result=data.result;reviewedReplacement=rep;renderReview(result);$('download').disabled=false;$('edit-state').textContent='Review current';};worker.onerror=e=>fail(e.message||'Review worker could not run');timeout=setTimeout(()=>fail('Review exceeded the 8-second processing limit. Reduce the input; no partial pass was produced.'),8000);worker.postMessage({id,manifest,replacement:rep});
+}
+function reset(mode='naive'){inputRevision++;manifest=structuredClone(demo);drafts={};drafts[manifest.target]=mode==='naive'?original()+'\n[*.txt]\nindent_size = 3\n':original().replace('indent_size = 4','indent_size = 3');renderSetup();runReview();}
+$('replacement').addEventListener('input',markStale);$('review').addEventListener('click',()=>{inputRevision++;runReview();});$('load-demo').addEventListener('click',()=>reset());$('naive').addEventListener('click',()=>reset());$('fixed').addEventListener('click',()=>reset('fixed'));
+$('restore').addEventListener('click',()=>{$('replacement').value=original();markStale();});$('target').addEventListener('change',()=>{drafts[manifest.target]=current();manifest.target=$('target').value;renderSetup();markStale();runReview();});
+async function applyManifest(text,token=++inputRevision){
+ let importWorker,timer;
+ try{
+  if(new TextEncoder().encode(text).length>2500000)throw Error('Manifest JSON exceeds 2.5 MB');const parsed=JSON.parse(text);
+  if(!parsed||!Array.isArray(parsed.configs)||parsed.configs.length<1||parsed.configs.length>32||!Array.isArray(parsed.paths)||parsed.paths.length<1||parsed.paths.length>512||!Array.isArray(parsed.absent)||parsed.absent.length>4096||parsed.assertions!==undefined&&(!Array.isArray(parsed.assertions)||parsed.assertions.length>1024))throw Error('Manifest limits: 1–32 configs, 1–512 paths, at most 4096 absent entries and 1024 assertions');
+  const clean=await new Promise((resolve,reject)=>{importWorker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});timer=setTimeout(()=>reject(Error('Manifest validation exceeded the 8-second limit')),8000);importWorker.onmessage=({data})=>data.error?reject(Error(data.error)):resolve(data.manifest);importWorker.onerror=e=>reject(Error(e.message||'Manifest validation worker failed'));importWorker.postMessage({action:'validate',id:token,manifest:parsed});});
+  if(token!==inputRevision)return;manifest=clean;drafts={};renderSetup();runReview();
+ }catch(e){if(token!==inputRevision)return;$('error').hidden=false;$('error').textContent='Import rejected; the previous scope is unchanged. '+e.message;$('error').scrollIntoView({block:'center',behavior:'smooth'});}finally{clearTimeout(timer);importWorker?.terminate();}
+}
+$('manifest-input').addEventListener('input',()=>inputRevision++);
+$('apply-manifest').addEventListener('click',()=>applyManifest($('manifest-input').value));
+$('import-file').addEventListener('change',async e=>{const token=++inputRevision,file=e.target.files[0];e.target.value='';if(!file)return;try{if(file.size>2500000)throw Error('Manifest JSON exceeds 2.5 MB');const text=await file.text();if(token===inputRevision)await applyManifest(text,token);}catch(error){if(token===inputRevision){$('error').hidden=false;$('error').textContent='Import rejected; the previous scope is unchanged. '+error.message;}}});
+$('export-manifest').addEventListener('click',()=>save('path-manifest.json',new Blob([JSON.stringify(manifest,null,2)+'\n'],{type:'application/json'})));
+$('download').addEventListener('click',()=>{if(!result||current()!==reviewedReplacement)return;const files={'replacement.editorconfig':reviewedReplacement,'original.editorconfig':original(),'path-manifest.json':JSON.stringify(manifest,null,2)+'\n','review-report.json':JSON.stringify({...result,replacement:reviewedReplacement,original:original()},null,2)+'\n'};save('indent-delta-review.zip',zip(files));});
+reset();

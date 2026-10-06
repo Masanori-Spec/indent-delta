@@ -1,0 +1,1 @@
+EditorConfig==0.17.1 --hash=sha256:1eda9c2c0db8c16dbd50111b710572a5e6de934e39772de1959d41f64fc17c82

@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-06T06:08:01.148Z",
+  "javascriptCore": "editorconfig 3.0.2",
+  "pythonCore": "EditorConfig 0.17.1",
+  "checkedResolutions": 50,
+  "scenarios": [
+    {
+      "name": "naive_append",
+      "status": "assertions-failed",
+      "matchedNativeResolutions": 10,
+      "failedAssertions": 2,
+      "missing": []
+    },
+    {
+      "name": "corrected_exception_last",
+      "status": "assertions-passed",
+      "matchedNativeResolutions": 10,
+      "failedAssertions": 0,
+      "missing": []
+    },
+    {
+      "name": "remove_root",
+      "status": "incomplete",
+      "matchedNativeResolutions": 6,
+      "failedAssertions": 5,
+      "missing": [
+        {
+          "path": "/demo/docs/prose.txt",
+          "phase": "after",
+          "config": "/.editorconfig"
+        },
+        {
+          "path": "/demo/CMakeLists.txt",
+          "phase": "after",
+          "config": "/.editorconfig"
+        },
+        {
+          "path": "/demo/sub/CMakeLists.txt",
+          "phase": "after",
+          "config": "/.editorconfig"
+        },
+        {
+          "path": "/demo/main.c",
+          "phase": "after",
+          "config": "/.editorconfig"
+        }
+      ]
+    },
+    {
+      "name": "protected_property",
+      "status": "assertions-failed",
+      "matchedNativeResolutions": 10,
+      "failedAssertions": 1,
+      "missing": []
+    },
+    {
+      "name": "unset_derived_duplicates_no_match",
+      "status": "no-assertions",
+      "matchedNativeResolutions": 8,
+      "failedAssertions": 0,
+      "missing": []
+    },
+    {
+      "name": "ancestors_and_nested_root",
+      "status": "no-assertions",
+      "matchedNativeResolutions": 6,
+      "failedAssertions": 0,
+      "missing": []
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> indent-delta@0.1.0 verify
+> npm run build && npm test && npm run test:native
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> indent-delta@0.1.0 build
+> node scripts/build.mjs
+
+Built static offline app; official parser unchanged except deterministic WASM-byte loading. Dependency notices included.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> indent-delta@0.1.0 test
+> node --test tests/engine.test.mjs
+
+✔ naive append breaks both basename exceptions but keeps nested root and C (10.571223ms)
+✔ exception-last replacement passes fixed checks with derived widths (2.123989ms)
+✔ negative controls: root removal and protected property fail closed (4.227518ms)
+✔ unset differs from absent and remains in matrix (2.820358ms)
+✔ missing subdirectory ancestry is unknown even under root=true (1.956902ms)
+✔ explicit absent ancestry makes no-match honest and allowed (1.148837ms)
+✔ lowercase duplicate keys preserve last assignment (0.747655ms)
+✔ unsupported syntax fails closed: mixed root (0.271221ms)
+✔ unsupported syntax fails closed: mixed keys (0.312853ms)
+✔ unsupported syntax fails closed: case duplicate (0.307374ms)
+✔ unsupported syntax fails closed: empty section (0.192885ms)
+✔ unsupported syntax fails closed: indented comments (0.113017ms)
+✔ unsupported syntax fails closed: a{3..1}.txt (0.208799ms)
+✔ unsupported syntax fails closed: a{01..03}.txt (0.119466ms)
+✔ unsupported syntax fails closed: a{a..c}.txt (0.119767ms)
+✔ unsupported syntax fails closed: a{1..3..2}.txt (0.170762ms)
+✔ unsupported syntax fails closed: a{+1..3}.txt (0.086838ms)
+✔ unsupported syntax fails closed: a[!b].txt (0.107809ms)
+✔ unsupported syntax fails closed: a[^b].txt (0.161098ms)
+✔ unsupported syntax fails closed: a[--0].txt (0.066959ms)
+✔ unsupported syntax fails closed: a[#].txt (0.045788ms)
+✔ unsupported syntax fails closed: a[;].txt (0.133647ms)
+✔ unsupported syntax fails closed: a{,b}.txt (0.127628ms)
+✔ unsupported syntax fails closed: a{b}.txt (0.071656ms)
+✔ unsupported syntax fails closed: **/**/**/**/**/**/**/x (0.061701ms)
+✔ ordinary positive class/list/range globs remain accepted (1.379409ms)
+✔ limits reject invalid input, duplicates, path traversal, and oversized assertions (1.130651ms)
+✔ four-file export retains exact original and replacement bytes and readable ZIP (34.493736ms)
+✔ browser built worker result matches native JS engine (27.199046ms)
+✔ oversized output is rejected rather than rendered or truncated (9.849276ms)
+✔ metacharacter config directories and non-ASCII syntax whitespace fail closed (0.58185ms)
+✔ missing ancestry output is bounded without a partial clean result (1.642468ms)
+✔ physical Python reproduction rejects tampered traversal before writing (30.05769ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 250.250939
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> indent-delta@0.1.0 test:native
+> node scripts/feasibility.mjs
+
+{
+  "checkedAt": "2026-10-06T06:08:01.148Z",
+  "javascriptCore": "editorconfig 3.0.2",
+  "pythonCore": "EditorConfig 0.17.1",
+  "checkedResolutions": 50,
+  "scenarios": [
+    {
+      "name": "naive_append",
+      "status": "assertions-failed",
+      "matchedNativeResolutions": 10,
+      "failedAssertions": 2,
+      "missing": []
+    },
+    {
+      "name": "corrected_exception_last",
+      "status": "assertions-passed",
+      "matchedNativeResolutions": 10,
+      "failedAssertions": 0,
+      "missing": []
+    },
+    {
+      "name": "remove_root",
+      "status": "incomplete",
+      "matchedNativeResolutions": 6,
+      "failedAssertions": 5,
+      "missing": [
+        {
+          "path": "/demo/docs/prose.txt",
+          "phase": "after",
+          "config": "/.editorconfig"
+        },
+        {
+          "path": "/demo/CMakeLists.txt",
+          "phase": "after",
+          "config": "/.editorconfig"
+        },
+        {
+          "path": "/demo/sub/CMakeLists.txt",
+          "phase": "after",
+          "config": "/.editorconfig"
+        },
+        {
+          "path": "/demo/main.c",
+          "phase": "after",
+          "config": "/.editorconfig"
+        }
+      ]
+    },
+    {
+      "name": "protected_property",
+      "status": "assertions-failed",
+      "matchedNativeResolutions": 10,
+      "failedAssertions": 1,
+      "missing": []
+    },
+    {
+      "name": "unset_derived_duplicates_no_match",
+      "status": "no-assertions",
+      "matchedNativeResolutions": 8,
+      "failedAssertions": 0,
+      "missing": []
+    },
+    {
+      "name": "ancestors_and_nested_root",
+      "status": "no-assertions",
+      "matchedNativeResolutions": 6,
+      "failedAssertions": 0,
+      "missing": []
+    }
+  ]
+}
