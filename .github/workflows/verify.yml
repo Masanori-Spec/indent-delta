@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - run: python -m pip install --require-hashes -r requirements-test.txt
       - run: npm run build
+      - run: npm run package:offline
       - run: npm test
       - run: npm run test:native
       - run: npx playwright install --with-deps chromium
@@ -28,5 +29,6 @@ jobs:
           name: verification-evidence
           path: |
             evidence/
+            release/
             test-results/
             playwright-report/
